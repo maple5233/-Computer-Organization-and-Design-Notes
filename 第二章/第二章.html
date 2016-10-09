@@ -1032,7 +1032,7 @@ body .markdown-body
 </ul>
 <hr />
 <h3 id="mips_1"><a name="user-content-mips_1" href="#mips_1" class="headeranchor-link" aria-hidden="true"><span class="headeranchor"></span></a>MIPS指令表</h3>
-<p>在MIPS架构中，指令被分为三种类型：R型、I型和J型。三种类型的指令的最高6位均为6位的opcode码。从25位往下，  </p>
+<p>在MIPS架构中，指令被分为三种类型：R型、I型和J型。三种类型的指令的最高6位均为6位的操作码。从25位往下，  </p>
 <ul>
 <li>R型指令用连续三个5位二进制码来表示三个寄存器的地址，然后用一个5位二进制码来表示移位的位数（如果未使用移位操作，则全为0），最后为6位的function码（它与opcode码共同决定R型指令的具体操作方式）；</li>
 <li>I型指令则用连续两个5位二进制码来表示两个寄存器的地址，然后是一个16位二进制码来表示的一个立即数二进制码；</li>
@@ -1045,4 +1045,48 @@ body .markdown-body
 <p><img alt="指令集1.jpg" src="/home/hongjiyao_2014150120/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%92%8C%E8%AE%BE%E8%AE%A1/%E7%AC%AC%E4%BA%8C%E7%AB%A0/%E6%8C%87%E4%BB%A4%E9%9B%861.jpg" /><br />
 <img alt="指令集2.jpg" src="/home/hongjiyao_2014150120/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%92%8C%E8%AE%BE%E8%AE%A1/%E7%AC%AC%E4%BA%8C%E7%AB%A0/%E6%8C%87%E4%BB%A4%E9%9B%862.jpg" /><br />
 <img alt="指令集3.jpg" src="/home/hongjiyao_2014150120/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%92%8C%E8%AE%BE%E8%AE%A1/%E7%AC%AC%E4%BA%8C%E7%AB%A0/%E6%8C%87%E4%BB%A4%E9%9B%863.jpg" /></p>
-<hr /></article></body></html>
+<hr />
+<h3 id="mips_2"><a name="user-content-mips_2" href="#mips_2" class="headeranchor-link" aria-hidden="true"><span class="headeranchor"></span></a>MIPS程序举例</h3>
+<ol>
+<li>条件分支</li>
+</ol>
+<p><pre><code class="shell">
+bne  $S3,$S4,Else
+add  $S0,$S1,$S2
+j    Exit
+Else : sub $S0,$S1,$S2
+Exit
+
+</code></pre><br />
+2. 循环</p>
+<p><pre><code class="java">while (A[i] == B) {
+    i++;
+}
+
+</code></pre><br />
+<pre><code class="shell">
+Loop : sll $t1,$s3,2 # 临时变量 $t1 = i*4 这是为了计算A[i]的地址
+add $t1，$t1,$s6     # s6是&amp;A[0] t1是&amp;A[i]
+lw $t0,0($t1)        # $t0 = A[i]
+bne $t0,$s5,Exit     # 不相等时跳出
+addi $s3,$s3,1       # i++
+j Loop
+Exit
+
+</code></pre></p>
+<h3 id="mips_3"><a name="user-content-mips_3" href="#mips_3" class="headeranchor-link" aria-hidden="true"><span class="headeranchor"></span></a>MIPS里的函数调用（过程）</h3>
+<h4 id="_2"><a name="user-content-_2" href="#_2" class="headeranchor-link" aria-hidden="true"><span class="headeranchor"></span></a>寄存器和指令约定</h4>
+<ol>
+<li><code>$a0 ~ $a3</code> 用于存放四个参数</li>
+<li><code>$v0 ~ $v1</code> 用于存放两个返回值</li>
+<li><code>$ra</code> 用于存放返回地址 即调用地址的PC+4</li>
+<li><code>jal</code> 后面跟地址表示调用该地址的函数 用 <code>jr $ra</code>返回</li>
+<li>被调用者想要用一些寄存器必须用栈结构——把寄存器的旧值压栈，以便腾出寄存器用，最后出栈恢复。</li>
+<li><code>$sp</code>是栈指针。压栈<code>$sp -= 4 * n</code>  出栈<code>$sp += 4 * n</code></li>
+<li><code>$t0 ~ $t9</code> 是存放临时值的 不需要被调用者保存</li>
+<li><code>$s0 ~ $s7</code> 被调用者要负责保存和恢复现场的寄存器</li>
+<li>嵌套调用的话 <code>$ra</code> 和参数寄存器之类可能互相覆盖，因此所有可能被覆盖的寄存器压栈，有必要的话，调用者会保存的会包括调用后还需要的<code>$a0 ~ $a3</code>和<code>$t0 ~ $t9</code>，被调用者会保存的包括<code>$ra</code>和被调用者使用的<code>$s0 ~ $s7</code> (<strong>因此迭代比递归性能高很多</strong>)</li>
+<li>多于4个参数的情况，可以将额外参数放在栈指针上方。</li>
+</ol>
+<p><img alt="寄存器约定1.png" src="/home/hongjiyao_2014150120/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%92%8C%E8%AE%BE%E8%AE%A1/%E7%AC%AC%E4%BA%8C%E7%AB%A0/%E5%AF%84%E5%AD%98%E5%99%A8%E7%BA%A6%E5%AE%9A1.png" /><br />
+<img alt="寄存器约定2.png" src="/home/hongjiyao_2014150120/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BB%84%E6%88%90%E5%92%8C%E8%AE%BE%E8%AE%A1/%E7%AC%AC%E4%BA%8C%E7%AB%A0/%E5%AF%84%E5%AD%98%E5%99%A8%E7%BA%A6%E5%AE%9A2.png" /></p></article></body></html>
